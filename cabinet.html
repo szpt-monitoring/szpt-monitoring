@@ -49,8 +49,8 @@
             alert("Вы не авторизованы!");
             window.location.href = "login.html"; // Перенаправление на страницу входа
         } else {
-            // Отображение логина, сохранённого в sessionStorage при входе
-            const userLogin = sessionStorage.getItem("username"); // Получение логина из sessionStorage
+            // Отображение логина
+            const userLogin = sessionStorage.getItem("username");
             if (userLogin) {
                 document.getElementById("user-login").textContent = userLogin;
             } else {
