@@ -72,6 +72,7 @@
             <li><a href="regions.html" onclick="checkAccess(event)">Сравнение регионов</a></li>
             <li><a href="analytics.html" onclick="checkAccess(event)">Аналитика</a></li>
             <li><a href="login.html">Вход</a></li>
+            <li><a href="cabinet.html" onclick="checkAccess(event)">Личный кабинет</a></li>
         </ul>
     </nav>
 
@@ -82,7 +83,7 @@
     </section>
 
     <script>
-        // Функция для проверки доступа к закрытым страницам
+        // Проверка доступа к закрытым страницам
         function checkAccess(event) {
             const isLoggedIn = sessionStorage.getItem("loggedIn");
             if (!isLoggedIn) {
