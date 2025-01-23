@@ -57,11 +57,26 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-top: 20px;
         }
+
+        .btn-fullscreen {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .btn-fullscreen:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>Мониторинг цен на СЗПТ</h1>
+        <h1>Мониторинг цен на социально значимые продовольственные товары</h1>
     </header>
 
     <nav>
@@ -78,8 +93,10 @@
 
     <section>
         <h2>Презентация</h2>
+        <!-- Кнопка для полноэкранного режима -->
+        <button class="btn-fullscreen" onclick="openFullscreen()">Показать на весь экран</button>
         <!-- Встроенный PDF-документ -->
-        <iframe src="08.01.2025_Мониторинг_цен_на_СЗПТ.pdf" title="Презентация"></iframe>
+        <iframe id="presentation" src="08.01.2025_Мониторинг_цен_на_СЗПТ.pdf" title="Презентация"></iframe>
     </section>
 
     <script>
@@ -90,6 +107,20 @@
                 event.preventDefault();
                 alert("Вы должны войти в систему, чтобы получить доступ к этой странице.");
                 window.location.href = "login.html"; // Перенаправление на страницу входа
+            }
+        }
+
+        // Функция для перехода в полноэкранный режим
+        function openFullscreen() {
+            const iframe = document.getElementById('presentation');
+            if (iframe.requestFullscreen) {
+                iframe.requestFullscreen();
+            } else if (iframe.mozRequestFullScreen) { // Firefox
+                iframe.mozRequestFullScreen();
+            } else if (iframe.webkitRequestFullscreen) { // Chrome, Safari, Opera
+                iframe.webkitRequestFullscreen();
+            } else if (iframe.msRequestFullscreen) { // IE/Edge
+                iframe.msRequestFullscreen();
             }
         }
     </script>
