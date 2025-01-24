@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Товарный баланс</title>
+    <!-- Подключение библиотеки XLSX через CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,6 +18,33 @@
             color: white;
             padding: 10px 20px;
             text-align: center;
+        }
+
+        nav {
+            background-color: #f8f9fa;
+            padding: 10px 0;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
         }
 
         section {
@@ -49,78 +78,53 @@
         <h1>Товарный баланс по СЗПТ</h1>
     </header>
 
+    <nav>
+        <ul>
+            <li><a href="index.html">Главная</a></li>
+            <li><a href="monitoring.html" onclick="checkAccess(event)">Мониторинг цен на СЗПТ</a></li>
+            <li><a href="charts.html" onclick="checkAccess(event)">Графики</a></li>
+            <li><a href="tables.html" onclick="checkAccess(event)">Таблицы</a></li>
+            <li><a href="balance.html" onclick="checkAccess(event)">Товарный баланс</a></li>
+            <li><a href="login.html">Вход</a></li>
+            <li><a href="cabinet.html" onclick="checkAccess(event)">Личный кабинет</a></li>
+        </ul>
+    </nav>
+
     <section>
-        <h2>Баланс по СЗПТ за 2021 год</h2>
-        <table>
-            <tr>
-                <th>Показатель</th>
-                <th>Значение</th>
-            </tr>
-            <tr>
-                <td>Производство</td>
-                <td>100 000 т</td>
-            </tr>
-            <tr>
-                <td>Импорт</td>
-                <td>20 000 т</td>
-            </tr>
-            <tr>
-                <td>Экспорт</td>
-                <td>5 000 т</td>
-            </tr>
-            <tr>
-                <td>Потребление</td>
-                <td>115 000 т</td>
-            </tr>
-        </table>
-
-        <h2>Баланс по СЗПТ за 2022 год</h2>
-        <table>
-            <tr>
-                <th>Показатель</th>
-                <th>Значение</th>
-            </tr>
-            <tr>
-                <td>Производство</td>
-                <td>105 000 т</td>
-            </tr>
-            <tr>
-                <td>Импорт</td>
-                <td>18 000 т</td>
-            </tr>
-            <tr>
-                <td>Экспорт</td>
-                <td>7 000 т</td>
-            </tr>
-            <tr>
-                <td>Потребление</td>
-                <td>116 000 т</td>
-            </tr>
-        </table>
-
-        <h2>Баланс по СЗПТ за 2023 год</h2>
-        <table>
-            <tr>
-                <th>Показатель</th>
-                <th>Значение</th>
-            </tr>
-            <tr>
-                <td>Производство</td>
-                <td>110 000 т</td>
-            </tr>
-            <tr>
-                <td>Импорт</td>
-                <td>15 000 т</td>
-            </tr>
-            <tr>
-                <td>Экспорт</td>
-                <td>8 000 т</td>
-            </tr>
-            <tr>
-                <td>Потребление</td>
-                <td>117 000 т</td>
-            </tr>
+        <h2>Баланс по СЗПТ</h2>
+        <p>Данные загружаются из таблицы Excel.</p>
+        <table id="excel-table">
+            <!-- Сюда будут загружены данные из Excel -->
         </table>
     </section>
+
+    <script>
+        // Проверка доступа к закрытым страницам
+        function checkAccess(event) {
+            const isLoggedIn = sessionStorage.getItem("loggedIn");
+            if (!isLoggedIn) {
+                event.preventDefault();
+                alert("Вы должны войти в систему, чтобы получить доступ к этой странице.");
+                window.location.href = "login.html"; // Перенаправление на страницу входа
+            }
+        }
+
+        // Загрузка Excel и отображение таблицы
+        fetch('balance.xlsx') // Замените 'balance.xlsx' на имя вашего Excel-файла
+            .then(response => {
+                if (!response.ok) throw new Error('Ошибка загрузки Excel-файла');
+                return response.arrayBuffer();
+            })
+            .then(data => {
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0]; // Берём первый лист
+                const worksheet = workbook.Sheets[firstSheetName];
+                const htmlTable = XLSX.utils.sheet_to_html(worksheet); // Конвертируем лист в HTML-таблицу
+                document.getElementById('excel-table').innerHTML = htmlTable; // Отображаем таблицу
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке Excel:', error);
+            });
+    </script>
 </body>
 </html>
