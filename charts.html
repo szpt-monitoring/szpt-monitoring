@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Графики</title>
+    <title>Линейчатая гистограмма</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
@@ -60,7 +60,7 @@
 </head>
 <body>
     <header>
-        <h1>Графики по СЗПТ</h1>
+        <h1>Линейчатая гистограмма</h1>
     </header>
 
     <nav>
@@ -76,9 +76,8 @@
     </nav>
 
     <section>
-        <h2>Графики</h2>
+        <h2>Рост цен на товары</h2>
         <div id="bar_chart" class="chart-container"></div>
-        <div id="line_chart" class="chart-container"></div>
     </section>
 
     <script>
@@ -88,47 +87,41 @@
 
         // Загрузка Excel файла
         function loadExcel() {
-            fetch('data.xlsx') // Замените 'data.xlsx' на путь к вашему файлу Excel
+            fetch('20250121_nac_god.xlsx') // Замените на путь к вашему Excel-файлу
                 .then(response => response.arrayBuffer())
                 .then(data => {
                     const workbook = XLSX.read(data, {type: 'array'});
                     const firstSheet = workbook.SheetNames[0];
                     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], {header: 1});
-                    drawCharts(sheetData);
+                    drawChart(sheetData);
                 })
                 .catch(error => console.error('Ошибка загрузки Excel:', error));
         }
 
-        // Построение графиков
-        function drawCharts(sheetData) {
+        // Построение графика
+        function drawChart(sheetData) {
             // Преобразуем данные из Excel для Google Charts
             const data = new google.visualization.DataTable();
-            data.addColumn('string', 'Месяц');
-            data.addColumn('number', 'Производство');
-            data.addColumn('number', 'Потребление');
+            data.addColumn('string', 'Товар');
+            data.addColumn('number', 'Рост цен (%)');
 
             sheetData.slice(1).forEach(row => {
-                data.addRow([row[0], row[1], row[2]]);
+                data.addRow([row[0], parseFloat(row[1])]);
             });
 
-            // Гистограмма
-            const barChartOptions = {
-                title: 'Производство и Потребление по месяцам',
-                hAxis: {title: 'Месяц'},
-                vAxis: {title: 'Объёмы (т)'},
-                legend: {position: 'top'}
+            // Опции для линейчатой гистограммы
+            const options = {
+                title: 'Рост цен на товары',
+                hAxis: {title: 'Рост цен (%)', minValue: 0},
+                vAxis: {title: 'Товары'},
+                bars: 'horizontal', // Линейчатая гистограмма
+                legend: {position: 'none'},
+                height: 500
             };
-            const barChart = new google.visualization.ColumnChart(document.getElementById('bar_chart'));
-            barChart.draw(data, barChartOptions);
 
-            // Линейная диаграмма
-            const lineChartOptions = {
-                title: 'Динамика Производства и Потребления',
-                curveType: 'function',
-                legend: {position: 'bottom'}
-            };
-            const lineChart = new google.visualization.LineChart(document.getElementById('line_chart'));
-            lineChart.draw(data, lineChartOptions);
+            // Рендер графика
+            const chart = new google.visualization.BarChart(document.getElementById('bar_chart'));
+            chart.draw(data, options);
         }
     </script>
 </body>
