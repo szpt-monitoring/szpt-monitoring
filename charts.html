@@ -111,7 +111,7 @@
                     const workbook = XLSX.read(data, {type: 'array'});
                     const firstSheet = workbook.SheetNames[0];
                     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], {header: 1});
-                    console.log(sheetData); // Лог для проверки загруженных данных
+                    console.log('Загруженные данные из Excel:', sheetData); // Лог для проверки данных
                     drawDashboard(sheetData);
                 })
                 .catch(error => console.error('Ошибка загрузки Excel:', error));
@@ -120,12 +120,18 @@
         // Построение дашборда с фильтром
         function drawDashboard(sheetData) {
             const data = new google.visualization.DataTable();
-            data.addColumn('string', 'Дата');
+            data.addColumn('string', 'Дата'); // Колонка с датой
             data.addColumn('string', 'Товар');
             data.addColumn('number', 'Рост цен (%)');
             data.addColumn({type: 'string', role: 'style'}); // Колонка для стиля
 
             let rkValue = 0; // Для хранения значения строки "РК в целом"
+
+            // Функция для преобразования формата даты
+            function formatDate(dateString) {
+                const parts = dateString.split('.'); // Разделяем дату по точке
+                return `${parts[2]}-${parts[1]}-${parts[0]}`; // Преобразуем в формат YYYY-MM-DD
+            }
 
             // Ищем значение "РК в целом"
             sheetData.slice(1).forEach(row => {
@@ -137,7 +143,8 @@
             // Заполняем данные для графика
             sheetData.slice(1).forEach(row => {
                 if (row[1] && row[2] !== undefined) {
-                    const date = row[0]; // Дата
+                    const rawDate = row[0]; // Дата в формате DD.MM.YYYY
+                    const formattedDate = formatDate(rawDate); // Преобразуем в формат YYYY-MM-DD
                     const value = parseFloat(row[2]) || 0;
                     const product = row[1]; // Товар
                     let color = 'green'; // Значения ниже "РК в целом" - зелёный
@@ -148,14 +155,15 @@
                         color = 'red'; // Значения выше "РК в целом" - красный
                     }
 
-                    data.addRow([date, product, value, `color: ${color}`]);
+                    data.addRow([formattedDate, product, value, `color: ${color}`]);
                 }
             });
+
+            console.log('Финальные данные для графика:', data);
 
             // Создание дашборда
             const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
 
-            // Фильтр по дате
             const dateFilter = new google.visualization.ControlWrapper({
                 controlType: 'CategoryFilter',
                 containerId: 'filter_div',
@@ -169,7 +177,6 @@
                 }
             });
 
-            // Линейчатая гистограмма
             const barChart = new google.visualization.ChartWrapper({
                 chartType: 'BarChart',
                 containerId: 'bar_chart',
@@ -185,10 +192,7 @@
                 }
             });
 
-            // Установка связи между фильтром и графиком
             dashboard.bind(dateFilter, barChart);
-
-            // Отрисовка дашборда
             dashboard.draw(data);
         }
     </script>
