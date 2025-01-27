@@ -54,7 +54,7 @@
         .chart-container {
             margin: 30px auto;
             width: 70%;
-            height: 900px; /* Увеличенная высота для всех данных */
+            height: 900px;
             border: 1px solid #ddd;
             padding: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -113,11 +113,30 @@
             const data = new google.visualization.DataTable();
             data.addColumn('string', 'Товар');
             data.addColumn('number', 'Рост цен (%)');
+            data.addColumn({type: 'string', role: 'style'}); // Колонка для стиля
 
-            // Обрабатываем строки, включая строки с нулевым ростом цен
+            let rkValue = 0; // Для хранения значения строки "РК в целом"
+
+            // Ищем значение "РК в целом"
             sheetData.slice(1).forEach(row => {
-                if (row[0] !== undefined && row[1] !== undefined) { // Проверяем наличие данных
-                    data.addRow([row[0], parseFloat(row[1]) || 0]); // Учитываем нули
+                if (row[0] === 'РК в целом') {
+                    rkValue = parseFloat(row[1]) || 0;
+                }
+            });
+
+            // Заполняем данные для графика
+            sheetData.slice(1).forEach(row => {
+                if (row[0] && row[1] !== undefined) {
+                    const value = parseFloat(row[1]) || 0;
+                    let color = 'green'; // Значения ниже "РК в целом" - зелёный
+
+                    if (row[0] === 'РК в целом') {
+                        color = 'blue'; // "РК в целом" - синий
+                    } else if (value > rkValue) {
+                        color = 'red'; // Значения выше "РК в целом" - красный
+                    }
+
+                    data.addRow([row[0], value, `color: ${color}`]);
                 }
             });
 
