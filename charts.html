@@ -20,17 +20,44 @@
             text-align: center;
         }
 
+        nav {
+            background-color: #f8f9fa;
+            padding: 10px 0;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+
         section {
             padding: 20px;
         }
 
         .chart-container {
-            margin: 30px auto; /* Добавлен отступ для центра */
-            width: 70%; /* Уменьшение ширины до 70% */
-            height: 650px; /* Увеличение высоты на 30% */
-            border: 1px solid #ddd; /* Добавлена рамка для визуализации */
+            margin: 30px auto;
+            width: 70%;
+            height: 900px; /* Увеличенная высота для всех данных */
+            border: 1px solid #ddd;
             padding: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Лёгкая тень */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         h2 {
@@ -44,6 +71,18 @@
     <header>
         <h1>Линейчатая гистограмма</h1>
     </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Главная</a></li>
+            <li><a href="monitoring.html" onclick="checkAccess(event)">Мониторинг цен на СЗПТ</a></li>
+            <li><a href="charts.html">Графики</a></li>
+            <li><a href="tables.html" onclick="checkAccess(event)">Таблицы</a></li>
+            <li><a href="balance.html" onclick="checkAccess(event)">Товарный баланс</a></li>
+            <li><a href="login.html">Вход</a></li>
+            <li><a href="cabinet.html" onclick="checkAccess(event)">Личный кабинет</a></li>
+        </ul>
+    </nav>
 
     <section>
         <h2>Рост цен на СЗПТ с начала года, %</h2>
@@ -63,6 +102,7 @@
                     const workbook = XLSX.read(data, {type: 'array'});
                     const firstSheet = workbook.SheetNames[0];
                     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], {header: 1});
+                    console.log(sheetData); // Лог для проверки загруженных данных
                     drawChart(sheetData);
                 })
                 .catch(error => console.error('Ошибка загрузки Excel:', error));
@@ -74,9 +114,10 @@
             data.addColumn('string', 'Товар');
             data.addColumn('number', 'Рост цен (%)');
 
+            // Обрабатываем строки, включая строки с нулевым ростом цен
             sheetData.slice(1).forEach(row => {
-                if (row[0] && row[1]) {
-                    data.addRow([row[0], parseFloat(row[1])]);
+                if (row[0] !== undefined && row[1] !== undefined) { // Проверяем наличие данных
+                    data.addRow([row[0], parseFloat(row[1]) || 0]); // Учитываем нули
                 }
             });
 
@@ -85,17 +126,17 @@
                 hAxis: {
                     title: 'Рост цен (%)',
                     minValue: 0,
-                    textStyle: {fontSize: 12} // Уменьшение шрифта на оси X
+                    textStyle: {fontSize: 12}
                 },
                 vAxis: {
                     title: 'Товары',
-                    textStyle: {fontSize: 10} // Уменьшение шрифта на оси Y
+                    textStyle: {fontSize: 8} // Уменьшение шрифта для длинных списков
                 },
-                bars: 'horizontal', // Линейчатая гистограмма
+                bars: 'horizontal',
                 legend: {position: 'none'},
-                height: 650, // Высота графика
+                height: 900, // Высота увеличена для всех товаров
                 width: 700, // Уменьшение ширины графика
-                bar: {groupWidth: '80%'} // Увеличение ширины столбцов
+                bar: {groupWidth: '80%'}
             };
 
             const chart = new google.visualization.BarChart(document.getElementById('bar_chart'));
