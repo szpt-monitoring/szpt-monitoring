@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Графики</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -76,28 +77,39 @@
 
     <section>
         <h2>Графики</h2>
-        <!-- Контейнеры для диаграмм -->
         <div id="bar_chart" class="chart-container"></div>
         <div id="line_chart" class="chart-container"></div>
-
-        <h2>Таблица данных</h2>
-        <div id="data_table" class="chart-container"></div>
     </section>
 
     <script>
         // Загрузка Google Charts
-        google.charts.load('current', {packages: ['corechart', 'table']});
-        google.charts.setOnLoadCallback(drawCharts);
+        google.charts.load('current', {packages: ['corechart']});
+        google.charts.setOnLoadCallback(loadExcel);
 
-        function drawCharts() {
-            // Данные для графиков
-            const data = google.visualization.arrayToDataTable([
-                ['Месяц', 'Производство', 'Потребление'],
-                ['Январь', 100, 120],
-                ['Февраль', 110, 130],
-                ['Март', 90, 115],
-                ['Апрель', 95, 105]
-            ]);
+        // Загрузка Excel файла
+        function loadExcel() {
+            fetch('data.xlsx') // Замените 'data.xlsx' на путь к вашему файлу Excel
+                .then(response => response.arrayBuffer())
+                .then(data => {
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheet = workbook.SheetNames[0];
+                    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], {header: 1});
+                    drawCharts(sheetData);
+                })
+                .catch(error => console.error('Ошибка загрузки Excel:', error));
+        }
+
+        // Построение графиков
+        function drawCharts(sheetData) {
+            // Преобразуем данные из Excel для Google Charts
+            const data = new google.visualization.DataTable();
+            data.addColumn('string', 'Месяц');
+            data.addColumn('number', 'Производство');
+            data.addColumn('number', 'Потребление');
+
+            sheetData.slice(1).forEach(row => {
+                data.addRow([row[0], row[1], row[2]]);
+            });
 
             // Гистограмма
             const barChartOptions = {
@@ -117,25 +129,6 @@
             };
             const lineChart = new google.visualization.LineChart(document.getElementById('line_chart'));
             lineChart.draw(data, lineChartOptions);
-
-            // Таблица
-            const tableData = google.visualization.arrayToDataTable([
-                ['Показатель', 'Январь', 'Февраль', 'Март', 'Апрель'],
-                ['Производство', 100, 110, 90, 95],
-                ['Потребление', 120, 130, 115, 105]
-            ]);
-            const table = new google.visualization.Table(document.getElementById('data_table'));
-            table.draw(tableData, {showRowNumber: true, width: '100%', height: '100%'});
-        }
-
-        // Проверка доступа к защищённым страницам
-        function checkAccess(event) {
-            const isLoggedIn = sessionStorage.getItem("loggedIn");
-            if (!isLoggedIn) {
-                event.preventDefault();
-                alert("Вы должны войти в систему, чтобы получить доступ к этой странице.");
-                window.location.href = "login.html";
-            }
         }
     </script>
 </body>
