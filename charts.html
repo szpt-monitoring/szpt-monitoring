@@ -77,16 +77,19 @@
 
                 // Создание новой таблицы с правильными типами данных
                 let data = new google.visualization.DataTable();
-                data.addColumn('string', 'Год'); // Год (фильтр)
+                data.addColumn('string', 'Год'); // Год как строка
                 data.addColumn('string', 'Товар'); // Название товара
-                data.addColumn('number', 'Рост цен (%)'); // Рост цен
+                data.addColumn('number', 'Рост цен (%)'); // Рост цен (число)
 
                 for (let i = 0; i < rawData.getNumberOfRows(); i++) {
-                    let year = rawData.getValue(i, 0).toString(); // Год как строка
+                    let year = rawData.getValue(i, 0); // Год
                     let product = rawData.getValue(i, 1); // Название товара
-                    let priceChange = parseFloat(rawData.getValue(i, 2)) || 0; // Рост цен
+                    let priceChange = parseFloat(rawData.getValue(i, 2)); // Преобразуем в число
 
-                    data.addRow([year, product, priceChange]);
+                    // Проверяем, чтобы данные были корректными
+                    if (year && product && !isNaN(priceChange)) {
+                        data.addRow([String(year), product, priceChange]); // Преобразуем год в строку
+                    }
                 }
 
                 // Создаём дашборд
