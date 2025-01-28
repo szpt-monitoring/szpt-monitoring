@@ -121,30 +121,35 @@
                 // Создаём BarChart напрямую
                 const chart = new google.visualization.BarChart(document.getElementById('bar_chart'));
 
-                // Фильтруем данные и отрисовываем график
-                yearFilter.draw(data);
-                yearFilter.setState({selectedValues: ['2024']}); // По умолчанию 2024
+                // Ждем появления контейнера перед отрисовкой
+                setTimeout(() => {
+                    console.log("Отрисовка графика...");
 
-                google.visualization.events.addListener(yearFilter, 'statechange', function() {
-                    let filteredData = new google.visualization.DataView(data);
-                    let selectedYear = yearFilter.getState().selectedValues[0];
-                    filteredData.setRows(data.getFilteredRows([{column: 0, value: selectedYear}]));
+                    // Фильтруем данные и отрисовываем график
+                    yearFilter.draw(data);
+                    yearFilter.setState({selectedValues: ['2024']}); // По умолчанию 2024
 
-                    chart.draw(filteredData, {
-                        title: 'Рост цен на товары по годам',
-                        hAxis: {title: 'Рост цен (%)', minValue: 0, textStyle: {fontSize: 12}},
-                        vAxis: {title: 'Товары', textStyle: {fontSize: 10}},
-                        legend: {position: 'none'},
-                        bars: 'horizontal',
-                        height: 600,
-                        width: 700,
-                        bar: {groupWidth: '80%'},
-                        colors: ['#4285F4']
+                    google.visualization.events.addListener(yearFilter, 'statechange', function() {
+                        let filteredData = new google.visualization.DataView(data);
+                        let selectedYear = yearFilter.getState().selectedValues[0];
+                        filteredData.setRows(data.getFilteredRows([{column: 0, value: selectedYear}]));
+
+                        chart.draw(filteredData, {
+                            title: 'Рост цен на товары по годам',
+                            hAxis: {title: 'Рост цен (%)', minValue: 0, textStyle: {fontSize: 12}},
+                            vAxis: {title: 'Товары', textStyle: {fontSize: 10}},
+                            legend: {position: 'none'},
+                            bars: 'horizontal',
+                            height: 600,
+                            width: 700,
+                            bar: {groupWidth: '80%'},
+                            colors: ['#4285F4']
+                        });
                     });
-                });
 
-                // Первоначальная отрисовка
-                google.visualization.events.trigger(yearFilter, 'statechange');
+                    // Первоначальная отрисовка
+                    google.visualization.events.trigger(yearFilter, 'statechange');
+                }, 1000); // Ожидание 1 секунду для полной загрузки контейнера
             });
         }
     </script>
