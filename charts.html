@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>График из Google Sheets</title>
+    <title>График из Google Sheets с фильтром</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <style>
         body {
@@ -32,6 +32,12 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        .filter-container {
+            margin: 20px auto;
+            width: 70%;
+            text-align: center;
+        }
+
         h2 {
             text-align: center;
             font-size: 20px;
@@ -41,20 +47,23 @@
 </head>
 <body>
     <header>
-        <h1>График из Google Sheets</h1>
+        <h1>График из Google Sheets с фильтром</h1>
     </header>
 
     <section>
-        <h2>Рост цен на СЗПТ с Google Sheets</h2>
-        <div id="bar_chart" class="chart-container"></div>
+        <h2>Рост цен на СЗПТ с фильтром по дате</h2>
+        <div id="dashboard">
+            <div class="filter-container" id="filter_div"></div>
+            <div id="bar_chart" class="chart-container"></div>
+        </div>
     </section>
 
     <script>
         // Загружаем Google Charts
-        google.charts.load('current', {packages: ['corechart', 'table']});
-        google.charts.setOnLoadCallback(drawChart);
+        google.charts.load('current', {packages: ['corechart', 'controls']});
+        google.charts.setOnLoadCallback(drawDashboard);
 
-        function drawChart() {
+        function drawDashboard() {
             const spreadsheetID = '18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4'; // Вставьте ваш ID Google Sheets
             const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${spreadsheetID}/gviz/tq?range=A1:C61`);
 
@@ -64,32 +73,59 @@
                     return;
                 }
 
-                let data = response.getDataTable();
-                
-                // Преобразуем данные во избежание ошибки типов
-                let formattedData = new google.visualization.DataTable();
-                formattedData.addColumn('string', 'Товар'); // Название товаров (ось Y)
-                formattedData.addColumn('number', 'Рост цен (%)'); // Рост цен (ось X)
+                const rawData = response.getDataTable();
 
-                for (let i = 0; i < data.getNumberOfRows(); i++) {
-                    let product = data.getValue(i, 1); // Название товара (из столбца B)
-                    let priceChange = parseFloat(data.getValue(i, 2)) || 0; // Рост цен (из столбца C), преобразуем в число
-                    formattedData.addRow([product, priceChange]);
+                // Формируем данные с корректным типом
+                let data = new google.visualization.DataTable();
+                data.addColumn('string', 'Дата'); // Дата для фильтра
+                data.addColumn('string', 'Товар'); // Название товара
+                data.addColumn('number', 'Рост цен (%)'); // Рост цен
+
+                for (let i = 0; i < rawData.getNumberOfRows(); i++) {
+                    let date = rawData.getValue(i, 0); // Дата
+                    let product = rawData.getValue(i, 1); // Товар
+                    let priceChange = parseFloat(rawData.getValue(i, 2)) || 0; // Рост цен
+                    data.addRow([date, product, priceChange]);
                 }
 
-                const options = {
-                    title: 'Рост цен на СЗПТ с Google Sheets',
-                    hAxis: {title: 'Рост цен (%)', minValue: 0, textStyle: {fontSize: 12}},
-                    vAxis: {title: 'Товары', textStyle: {fontSize: 10}}, // Немного увеличили шрифт для читаемости
-                    legend: {position: 'none'},
-                    bars: 'horizontal',
-                    height: 900,
-                    width: 700,
-                    bar: {groupWidth: '80%'}
-                };
+                // Создаём дашборд
+                const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
 
-                const chart = new google.visualization.BarChart(document.getElementById('bar_chart'));
-                chart.draw(formattedData, options);
+                // Фильтр по дате
+                const dateFilter = new google.visualization.ControlWrapper({
+                    controlType: 'CategoryFilter',
+                    containerId: 'filter_div',
+                    options: {
+                        filterColumnIndex: 0, // Фильтр по первой колонке (Дата)
+                        ui: {
+                            label: 'Выберите дату',
+                            allowTyping: false,
+                            allowMultiple: false
+                        }
+                    }
+                });
+
+                // График
+                const barChart = new google.visualization.ChartWrapper({
+                    chartType: 'BarChart',
+                    containerId: 'bar_chart',
+                    options: {
+                        title: 'Рост цен на СЗПТ с выбранной датой',
+                        hAxis: {title: 'Рост цен (%)', minValue: 0, textStyle: {fontSize: 12}},
+                        vAxis: {title: 'Товары', textStyle: {fontSize: 10}},
+                        legend: {position: 'none'},
+                        bars: 'horizontal',
+                        height: 900,
+                        width: 700,
+                        bar: {groupWidth: '80%'}
+                    }
+                });
+
+                // Связываем фильтр и график
+                dashboard.bind(dateFilter, barChart);
+
+                // Отрисовываем дашборд
+                dashboard.draw(data);
             });
         }
     </script>
