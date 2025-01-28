@@ -59,7 +59,7 @@
     </section>
 
     <script>
-        // Загружаем Google Charts
+        // Загрузка Google Charts
         google.charts.load('current', {packages: ['corechart', 'controls']});
         google.charts.setOnLoadCallback(drawDashboard);
 
@@ -75,14 +75,21 @@
 
                 const rawData = response.getDataTable();
 
-                // Формируем данные с корректным типом
+                // Функция преобразования даты (если формат DD.MM.YYYY)
+                function formatDate(dateString) {
+                    if (!dateString.includes('.')) return dateString; // Если дата уже в правильном формате
+                    const parts = dateString.split('.');
+                    return `${parts[2]}-${parts[1]}-${parts[0]}`; // Преобразуем в формат YYYY-MM-DD
+                }
+
+                // Создание новой таблицы с преобразованными данными
                 let data = new google.visualization.DataTable();
                 data.addColumn('string', 'Дата'); // Дата для фильтра
                 data.addColumn('string', 'Товар'); // Название товара
                 data.addColumn('number', 'Рост цен (%)'); // Рост цен
 
                 for (let i = 0; i < rawData.getNumberOfRows(); i++) {
-                    let date = rawData.getValue(i, 0); // Дата
+                    let date = formatDate(rawData.getValue(i, 0)); // Преобразуем дату
                     let product = rawData.getValue(i, 1); // Товар
                     let priceChange = parseFloat(rawData.getValue(i, 2)) || 0; // Рост цен
                     data.addRow([date, product, priceChange]);
