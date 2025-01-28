@@ -56,7 +56,7 @@
 
         function drawChart() {
             const spreadsheetID = '18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4'; // Вставьте ваш ID Google Sheets
-            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${spreadsheetID}/gviz/tq?range=A1:C20`);
+            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${spreadsheetID}/gviz/tq?range=A1:C61`);
 
             query.send(response => {
                 if (response.isError()) {
