@@ -19,33 +19,6 @@
             text-align: center;
         }
 
-        nav {
-            background-color: #f8f9fa;
-            padding: 10px 0;
-        }
-
-        nav ul {
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            margin: 0;
-            padding: 0;
-        }
-
-        nav ul li {
-            margin: 0 15px;
-        }
-
-        nav ul li a {
-            text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
-        }
-
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-
         section {
             padding: 20px;
         }
@@ -71,31 +44,19 @@
         <h1>График из Google Sheets</h1>
     </header>
 
-    <nav>
-        <ul>
-            <li><a href="index.html">Главная</a></li>
-            <li><a href="monitoring.html" onclick="checkAccess(event)">Мониторинг цен на СЗПТ</a></li>
-            <li><a href="charts.html">Графики</a></li>
-            <li><a href="tables.html" onclick="checkAccess(event)">Таблицы</a></li>
-            <li><a href="balance.html" onclick="checkAccess(event)">Товарный баланс</a></li>
-            <li><a href="login.html">Вход</a></li>
-            <li><a href="cabinet.html" onclick="checkAccess(event)">Личный кабинет</a></li>
-        </ul>
-    </nav>
-
     <section>
         <h2>Рост цен на СЗПТ с Google Sheets</h2>
         <div id="bar_chart" class="chart-container"></div>
     </section>
 
     <script>
-        // Загрузка Google Charts
-        google.charts.load('current', {packages: ['corechart']});
+        // Загружаем Google Charts
+        google.charts.load('current', {packages: ['corechart', 'table']});
         google.charts.setOnLoadCallback(drawChart);
 
         function drawChart() {
-            const spreadsheetID = '18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4'; // Вставьте ваш ID таблицы
-            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4/gviz/tq?range=A1:C61`);
+            const spreadsheetID = '18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4'; // Вставьте ваш ID Google Sheets
+            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${spreadsheetID}/gviz/tq?range=A1:C20`);
 
             query.send(response => {
                 if (response.isError()) {
@@ -103,11 +64,23 @@
                     return;
                 }
 
-                const data = response.getDataTable();
+                let data = response.getDataTable();
+                
+                // Преобразуем данные во избежание ошибки типов
+                let formattedData = new google.visualization.DataTable();
+                formattedData.addColumn('string', 'Товар'); // Название товаров (ось Y)
+                formattedData.addColumn('number', 'Рост цен (%)'); // Рост цен (ось X)
+
+                for (let i = 0; i < data.getNumberOfRows(); i++) {
+                    let product = data.getValue(i, 1); // Название товара (из столбца B)
+                    let priceChange = parseFloat(data.getValue(i, 2)) || 0; // Рост цен (из столбца C), преобразуем в число
+                    formattedData.addRow([product, priceChange]);
+                }
+
                 const options = {
                     title: 'Рост цен на СЗПТ с Google Sheets',
                     hAxis: {title: 'Рост цен (%)', minValue: 0, textStyle: {fontSize: 12}},
-                    vAxis: {title: 'Товары', textStyle: {fontSize: 8}},
+                    vAxis: {title: 'Товары', textStyle: {fontSize: 10}}, // Немного увеличили шрифт для читаемости
                     legend: {position: 'none'},
                     bars: 'horizontal',
                     height: 900,
@@ -116,7 +89,7 @@
                 };
 
                 const chart = new google.visualization.BarChart(document.getElementById('bar_chart'));
-                chart.draw(data, options);
+                chart.draw(formattedData, options);
             });
         }
     </script>
