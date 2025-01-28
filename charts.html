@@ -52,10 +52,8 @@
 
     <section>
         <h2>Рост цен на товары с фильтром по году</h2>
-        <div id="dashboard">
-            <div class="filter-container" id="filter_div"></div>
-            <div id="bar_chart" class="chart-container"></div>
-        </div>
+        <div id="filter_div" class="filter-container"></div>
+        <div id="bar_chart" class="chart-container"></div>
     </section>
 
     <script>
@@ -74,7 +72,7 @@
                 }
 
                 const rawData = response.getDataTable();
-                console.log('Сырые данные из Google Sheets:', rawData); // Проверка
+                console.log('Сырые данные из Google Sheets:', rawData);
 
                 // Создание таблицы для графика
                 let data = new google.visualization.DataTable();
@@ -83,36 +81,32 @@
                 data.addColumn('number', 'Рост цен (%)'); // Ось X (значения)
 
                 for (let i = 0; i < rawData.getNumberOfRows(); i++) {
-                    let year = rawData.getValue(i, 0)?.toString().trim(); // Преобразуем год в строку
-                    let product = rawData.getValue(i, 1)?.trim(); // Товар
+                    let year = rawData.getValue(i, 0).toString().trim(); // Преобразуем год в строку
+                    let product = rawData.getValue(i, 1).trim(); // Товар
                     let priceChange = parseFloat(rawData.getValue(i, 2)); // Преобразуем в число
 
                     // Проверяем, что данные корректны перед добавлением
                     if (year && product && !isNaN(priceChange)) {
-                        console.log(`Добавляем строку: ${year}, ${product}, ${priceChange}`); // Проверяем строки
+                        console.log(`Добавляем строку: ${year}, ${product}, ${priceChange}`);
                         data.addRow([year, product, priceChange]);
                     } else {
-                        console.warn(`Пропущена строка из-за некорректных данных: ${year}, ${product}, ${rawData.getValue(i, 2)}`);
+                        console.warn(`Пропущена строка: ${year}, ${product}, ${rawData.getValue(i, 2)}`);
                     }
                 }
 
-                console.log('Форматированные данные для графика:', JSON.stringify(data.toJSON()));
+                console.log('Форматированные данные:', JSON.stringify(data.toJSON()));
 
-                // Проверяем, есть ли данные перед отрисовкой
                 if (data.getNumberOfRows() === 0) {
-                    console.error('Ошибка: Нет данных для отображения графика.');
+                    console.error('Нет данных для отображения.');
                     return;
                 }
 
-                // Создаём дашборд
-                const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
-
-                // Фильтр по году
+                // Создаём фильтр
                 const yearFilter = new google.visualization.ControlWrapper({
                     controlType: 'CategoryFilter',
                     containerId: 'filter_div',
                     options: {
-                        filterColumnIndex: 0, // Фильтр по первой колонке (Год)
+                        filterColumnIndex: 0, // Фильтр по году
                         ui: {
                             label: 'Выберите год',
                             allowTyping: false,
@@ -121,11 +115,19 @@
                     }
                 });
 
-                // График
-                const barChart = new google.visualization.ChartWrapper({
-                    chartType: 'BarChart',
-                    containerId: 'bar_chart',
-                    options: {
+                // Создаём график напрямую
+                const chart = new google.visualization.BarChart(document.getElementById('bar_chart'));
+
+                // Фильтруем данные и отрисовываем график
+                yearFilter.draw(data);
+                yearFilter.setState({selectedValues: ['2024']}); // По умолчанию 2024
+
+                google.visualization.events.addListener(yearFilter, 'statechange', function() {
+                    let filteredData = new google.visualization.DataView(data);
+                    let selectedYear = yearFilter.getState().selectedValues[0];
+                    filteredData.setRows(data.getFilteredRows([{column: 0, value: selectedYear}]));
+
+                    chart.draw(filteredData, {
                         title: 'Рост цен на товары по годам',
                         hAxis: {title: 'Рост цен (%)', minValue: 0, textStyle: {fontSize: 12}},
                         vAxis: {title: 'Товары', textStyle: {fontSize: 10}},
@@ -133,18 +135,13 @@
                         bars: 'horizontal',
                         height: 600,
                         width: 700,
-                        bar: {groupWidth: '60%'}, // Уменьшил ширину столбиков для читаемости
-                        colors: ['#4285F4'] // Синий цвет столбиков
-                    }
+                        bar: {groupWidth: '80%'},
+                        colors: ['#4285F4']
+                    });
                 });
 
-                // Связываем фильтр и график
-                dashboard.bind(yearFilter, barChart);
-
-                // Ожидаем загрузки данных перед отрисовкой
-                setTimeout(() => {
-                    dashboard.draw(data);
-                }, 500);
+                // Первоначальная отрисовка
+                google.visualization.events.trigger(yearFilter, 'statechange');
             });
         }
     </script>
