@@ -74,6 +74,9 @@
                 const rawData = response.getDataTable();
                 console.log('Сырые данные из Google Sheets:', rawData);
 
+                // Проверяем, существует ли контейнер для графика
+                console.log("Элемент контейнера для графика:", document.getElementById("bar_chart"));
+                
                 // Создание таблицы для графика
                 let data = new google.visualization.DataTable();
                 data.addColumn('string', 'Год'); // Фильтр
@@ -97,7 +100,7 @@
                 console.log('Форматированные данные:', JSON.stringify(data.toJSON()));
 
                 if (data.getNumberOfRows() === 0) {
-                    console.error('Нет данных для отображения.');
+                    console.error('Ошибка: Нет данных для отображения.');
                     return;
                 }
 
@@ -115,7 +118,7 @@
                     }
                 });
 
-                // Создаём график напрямую
+                // Создаём BarChart напрямую
                 const chart = new google.visualization.BarChart(document.getElementById('bar_chart'));
 
                 // Фильтруем данные и отрисовываем график
