@@ -94,8 +94,8 @@
         google.charts.setOnLoadCallback(drawChart);
 
         function drawChart() {
-            const spreadsheetID = '1ABCD1234EfGh5678IjklMNOpqrStUVWXYZ'; // Вставьте ваш ID таблицы
-            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4}/gviz/tq?range=A1:C61`);
+            const spreadsheetID = '18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4'; // Вставьте ваш ID таблицы
+            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4/gviz/tq?range=A1:C61`);
 
             query.send(response => {
                 if (response.isError()) {
