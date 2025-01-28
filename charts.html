@@ -64,8 +64,8 @@
         google.charts.setOnLoadCallback(drawDashboard);
 
         function drawDashboard() {
-            const spreadsheetID = '18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4'; // Вставьте ваш ID Google Sheets
-            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${spreadsheetID}/gviz/tq?range=A1:C5`);
+            const spreadsheetID = '18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4'; // Вставьте ваш Google Sheets ID
+            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${spreadsheetID}/gviz/tq?range=A1:C10`);
 
             query.send(response => {
                 if (response.isError()) {
@@ -75,22 +75,24 @@
 
                 const rawData = response.getDataTable();
 
-                // Создание новой таблицы с правильными типами данных
+                // Создание таблицы для графика
                 let data = new google.visualization.DataTable();
-                data.addColumn('string', 'Год'); // Год как строка
-                data.addColumn('string', 'Товар'); // Название товара
-                data.addColumn('number', 'Рост цен (%)'); // Рост цен (число)
+                data.addColumn('string', 'Год'); // Фильтр
+                data.addColumn('string', 'Товар'); // Ось Y (названия товаров)
+                data.addColumn('number', 'Рост цен (%)'); // Ось X (значения)
 
                 for (let i = 0; i < rawData.getNumberOfRows(); i++) {
-                    let year = rawData.getValue(i, 0); // Год
-                    let product = rawData.getValue(i, 1); // Название товара
+                    let year = rawData.getValue(i, 0).toString().trim(); // Преобразуем год в строку
+                    let product = rawData.getValue(i, 1).trim(); // Товар
                     let priceChange = parseFloat(rawData.getValue(i, 2)); // Преобразуем в число
 
-                    // Проверяем, чтобы данные были корректными
+                    // Проверяем, что данные корректны перед добавлением
                     if (year && product && !isNaN(priceChange)) {
-                        data.addRow([String(year), product, priceChange]); // Преобразуем год в строку
+                        data.addRow([year, product, priceChange]);
                     }
                 }
+
+                console.log('Форматированные данные:', data);
 
                 // Создаём дашборд
                 const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
