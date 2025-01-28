@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Линейчатая гистограмма с фильтром</title>
+    <title>График из Google Sheets</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -60,12 +59,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .filter-container {
-            margin: 20px auto;
-            width: 70%;
-            text-align: center;
-        }
-
         h2 {
             text-align: center;
             font-size: 20px;
@@ -75,7 +68,7 @@
 </head>
 <body>
     <header>
-        <h1>Линейчатая гистограмма с фильтром</h1>
+        <h1>График из Google Sheets</h1>
     </header>
 
     <nav>
@@ -91,97 +84,28 @@
     </nav>
 
     <section>
-        <h2>Рост цен на СЗПТ с начала года, %</h2>
-        <div id="dashboard">
-            <div class="filter-container" id="filter_div"></div>
-            <div class="chart-container" id="bar_chart"></div>
-        </div>
+        <h2>Рост цен на СЗПТ с Google Sheets</h2>
+        <div id="bar_chart" class="chart-container"></div>
     </section>
 
     <script>
         // Загрузка Google Charts
-        google.charts.load('current', {packages: ['corechart', 'controls']});
-        google.charts.setOnLoadCallback(loadExcel);
+        google.charts.load('current', {packages: ['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
 
-        // Загрузка Excel файла
-        function loadExcel() {
-            fetch('20250121_nac_god.xlsx') // Убедитесь, что путь правильный
-                .then(response => response.arrayBuffer())
-                .then(data => {
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const firstSheet = workbook.SheetNames[0];
-                    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], {header: 1});
-                    console.log('Загруженные данные из Excel:', sheetData); // Лог для проверки данных
-                    drawDashboard(sheetData);
-                })
-                .catch(error => console.error('Ошибка загрузки Excel:', error));
-        }
+        function drawChart() {
+            const spreadsheetID = '1ABCD1234EfGh5678IjklMNOpqrStUVWXYZ'; // Вставьте ваш ID таблицы
+            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4}/gviz/tq?range=A1:C61`);
 
-        // Построение дашборда с фильтром
-        function drawDashboard(sheetData) {
-            const data = new google.visualization.DataTable();
-            data.addColumn('string', 'Дата'); // Колонка с датой
-            data.addColumn('string', 'Товар');
-            data.addColumn('number', 'Рост цен (%)');
-            data.addColumn({type: 'string', role: 'style'}); // Колонка для стиля
-
-            let rkValue = 0; // Для хранения значения строки "РК в целом"
-
-            // Функция для преобразования формата даты
-            function formatDate(dateString) {
-                const parts = dateString.split('.'); // Разделяем дату по точке
-                return `${parts[2]}-${parts[1]}-${parts[0]}`; // Преобразуем в формат YYYY-MM-DD
-            }
-
-            // Ищем значение "РК в целом"
-            sheetData.slice(1).forEach(row => {
-                if (row[1] === 'РК в целом') {
-                    rkValue = parseFloat(row[2]) || 0;
+            query.send(response => {
+                if (response.isError()) {
+                    console.error('Ошибка загрузки данных:', response.getMessage());
+                    return;
                 }
-            });
 
-            // Заполняем данные для графика
-            sheetData.slice(1).forEach(row => {
-                if (row[1] && row[2] !== undefined) {
-                    const rawDate = row[0]; // Дата в формате DD.MM.YYYY
-                    const formattedDate = formatDate(rawDate); // Преобразуем в формат YYYY-MM-DD
-                    const value = parseFloat(row[2]) || 0;
-                    const product = row[1]; // Товар
-                    let color = 'green'; // Значения ниже "РК в целом" - зелёный
-
-                    if (product === 'РК в целом') {
-                        color = 'blue'; // "РК в целом" - синий
-                    } else if (value > rkValue) {
-                        color = 'red'; // Значения выше "РК в целом" - красный
-                    }
-
-                    data.addRow([formattedDate, product, value, `color: ${color}`]);
-                }
-            });
-
-            console.log('Финальные данные для графика:', data);
-
-            // Создание дашборда
-            const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
-
-            const dateFilter = new google.visualization.ControlWrapper({
-                controlType: 'CategoryFilter',
-                containerId: 'filter_div',
-                options: {
-                    filterColumnIndex: 0, // Фильтр по дате
-                    ui: {
-                        label: 'Выберите дату',
-                        allowTyping: false,
-                        allowMultiple: false
-                    }
-                }
-            });
-
-            const barChart = new google.visualization.ChartWrapper({
-                chartType: 'BarChart',
-                containerId: 'bar_chart',
-                options: {
-                    title: 'Рост цен на СЗПТ с начала года, %',
+                const data = response.getDataTable();
+                const options = {
+                    title: 'Рост цен на СЗПТ с Google Sheets',
                     hAxis: {title: 'Рост цен (%)', minValue: 0, textStyle: {fontSize: 12}},
                     vAxis: {title: 'Товары', textStyle: {fontSize: 8}},
                     legend: {position: 'none'},
@@ -189,11 +113,11 @@
                     height: 900,
                     width: 700,
                     bar: {groupWidth: '80%'}
-                }
-            });
+                };
 
-            dashboard.bind(dateFilter, barChart);
-            dashboard.draw(data);
+                const chart = new google.visualization.BarChart(document.getElementById('bar_chart'));
+                chart.draw(data, options);
+            });
         }
     </script>
 </body>
