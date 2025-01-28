@@ -64,76 +64,80 @@
         google.charts.setOnLoadCallback(drawDashboard);
 
         function drawDashboard() {
-            const spreadsheetID = '18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4'; // Вставьте ваш Google Sheets ID
-            const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${spreadsheetID}/gviz/tq?range=A1:C10`);
+    const spreadsheetID = '18AAB59JF3fV17koElPdQw-hr4ExUpTOVXaevw9nVfD4'; // Вставьте ваш Google Sheets ID
+    const query = new google.visualization.Query(`https://docs.google.com/spreadsheets/d/${spreadsheetID}/gviz/tq?range=A1:C10`);
 
-            query.send(response => {
-                if (response.isError()) {
-                    console.error('Ошибка загрузки данных:', response.getMessage());
-                    return;
-                }
-
-                const rawData = response.getDataTable();
-
-                // Создание таблицы для графика
-                let data = new google.visualization.DataTable();
-                data.addColumn('string', 'Год'); // Фильтр
-                data.addColumn('string', 'Товар'); // Ось Y (названия товаров)
-                data.addColumn('number', 'Рост цен (%)'); // Ось X (значения)
-
-                for (let i = 0; i < rawData.getNumberOfRows(); i++) {
-                    let year = rawData.getValue(i, 0).toString().trim(); // Преобразуем год в строку
-                    let product = rawData.getValue(i, 1).trim(); // Товар
-                    let priceChange = parseFloat(rawData.getValue(i, 2)); // Преобразуем в число
-
-                    // Проверяем, что данные корректны перед добавлением
-                    if (year && product && !isNaN(priceChange)) {
-                        data.addRow([year, product, priceChange]);
-                    }
-                }
-
-                console.log('Форматированные данные:', data);
-
-                // Создаём дашборд
-                const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
-
-                // Фильтр по году
-                const yearFilter = new google.visualization.ControlWrapper({
-                    controlType: 'CategoryFilter',
-                    containerId: 'filter_div',
-                    options: {
-                        filterColumnIndex: 0, // Фильтр по первой колонке (Год)
-                        ui: {
-                            label: 'Выберите год',
-                            allowTyping: false,
-                            allowMultiple: false
-                        }
-                    }
-                });
-
-                // График
-                const barChart = new google.visualization.ChartWrapper({
-                    chartType: 'BarChart',
-                    containerId: 'bar_chart',
-                    options: {
-                        title: 'Рост цен на товары по годам',
-                        hAxis: {title: 'Рост цен (%)', minValue: 0, textStyle: {fontSize: 12}},
-                        vAxis: {title: 'Товары', textStyle: {fontSize: 10}},
-                        legend: {position: 'none'},
-                        bars: 'horizontal',
-                        height: 600,
-                        width: 700,
-                        bar: {groupWidth: '80%'}
-                    }
-                });
-
-                // Связываем фильтр и график
-                dashboard.bind(yearFilter, barChart);
-
-                // Отрисовываем дашборд
-                dashboard.draw(data);
-            });
+    query.send(response => {
+        if (response.isError()) {
+            console.error('Ошибка загрузки данных:', response.getMessage());
+            return;
         }
+
+        const rawData = response.getDataTable();
+        console.log('Сырые данные из Google Sheets:', rawData); // Проверка
+
+        // Создание таблицы для графика
+        let data = new google.visualization.DataTable();
+        data.addColumn('string', 'Год'); // Фильтр
+        data.addColumn('string', 'Товар'); // Ось Y (названия товаров)
+        data.addColumn('number', 'Рост цен (%)'); // Ось X (значения)
+
+        for (let i = 0; i < rawData.getNumberOfRows(); i++) {
+            let year = rawData.getValue(i, 0)?.toString().trim(); // Преобразуем год в строку
+            let product = rawData.getValue(i, 1)?.trim(); // Товар
+            let priceChange = parseFloat(rawData.getValue(i, 2)); // Преобразуем в число
+
+            // Проверяем, что данные корректны перед добавлением
+            if (year && product && !isNaN(priceChange)) {
+                console.log(`Добавляем строку: ${year}, ${product}, ${priceChange}`); // Проверяем строки
+                data.addRow([year, product, priceChange]);
+            } else {
+                console.warn(`Пропущена строка из-за некорректных данных: ${year}, ${product}, ${rawData.getValue(i, 2)}`);
+            }
+        }
+
+        console.log('Форматированные данные для графика:', data);
+
+        // Создаём дашборд
+        const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
+
+        // Фильтр по году
+        const yearFilter = new google.visualization.ControlWrapper({
+            controlType: 'CategoryFilter',
+            containerId: 'filter_div',
+            options: {
+                filterColumnIndex: 0, // Фильтр по первой колонке (Год)
+                ui: {
+                    label: 'Выберите год',
+                    allowTyping: false,
+                    allowMultiple: false
+                }
+            }
+        });
+
+        // График
+        const barChart = new google.visualization.ChartWrapper({
+            chartType: 'BarChart',
+            containerId: 'bar_chart',
+            options: {
+                title: 'Рост цен на товары по годам',
+                hAxis: {title: 'Рост цен (%)', minValue: 0, textStyle: {fontSize: 12}},
+                vAxis: {title: 'Товары', textStyle: {fontSize: 10}},
+                legend: {position: 'none'},
+                bars: 'horizontal',
+                height: 600,
+                width: 700,
+                bar: {groupWidth: '80%'}
+            }
+        });
+
+        // Связываем фильтр и график
+        dashboard.bind(yearFilter, barChart);
+
+        // Отрисовываем дашборд
+        dashboard.draw(data);
+    });
+}
     </script>
 </body>
 </html>
